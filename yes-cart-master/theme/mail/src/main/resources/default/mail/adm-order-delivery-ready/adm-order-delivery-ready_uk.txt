@@ -1,0 +1,4 @@
+Доставка $deliveryNum для замовлення $root.ordernum на $shop.name підготовлена для відправлення
+для $root.firstname $root.lastname $root.email
+
+${include('common-adm-order-delivery-details')}

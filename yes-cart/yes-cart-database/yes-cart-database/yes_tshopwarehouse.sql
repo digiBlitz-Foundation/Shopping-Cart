@@ -1,0 +1,64 @@
+-- MySQL dump 10.13  Distrib 5.7.17, for Win64 (x86_64)
+--
+-- Host: localhost    Database: yes
+-- ------------------------------------------------------
+-- Server version	5.5.39
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `tshopwarehouse`
+--
+
+DROP TABLE IF EXISTS `tshopwarehouse`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tshopwarehouse` (
+  `SHOPWAREHOUSE_ID` bigint(20) NOT NULL AUTO_INCREMENT,
+  `VERSION` bigint(20) NOT NULL DEFAULT '0',
+  `SHOP_ID` bigint(20) NOT NULL,
+  `WAREHOUSE_ID` bigint(20) NOT NULL,
+  `RANK` int(11) DEFAULT NULL COMMENT 'Warehouse priority usage',
+  `CREATED_TIMESTAMP` datetime DEFAULT NULL,
+  `UPDATED_TIMESTAMP` datetime DEFAULT NULL,
+  `CREATED_BY` varchar(64) DEFAULT NULL,
+  `UPDATED_BY` varchar(64) DEFAULT NULL,
+  `GUID` varchar(36) NOT NULL,
+  PRIMARY KEY (`SHOPWAREHOUSE_ID`),
+  UNIQUE KEY `GUID` (`GUID`),
+  KEY `FK13C59499F65CA98` (`SHOP_ID`),
+  KEY `FK13C594991C1544FC` (`WAREHOUSE_ID`),
+  CONSTRAINT `FK13C594991C1544FC` FOREIGN KEY (`WAREHOUSE_ID`) REFERENCES `twarehouse` (`WAREHOUSE_ID`),
+  CONSTRAINT `FK13C59499F65CA98` FOREIGN KEY (`SHOP_ID`) REFERENCES `tshop` (`SHOP_ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8 COMMENT='Relation between shop and warehouses';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tshopwarehouse`
+--
+
+LOCK TABLES `tshopwarehouse` WRITE;
+/*!40000 ALTER TABLE `tshopwarehouse` DISABLE KEYS */;
+INSERT INTO `tshopwarehouse` VALUES (10,0,10,1,10,NULL,NULL,NULL,NULL,'SHOP10_Main'),(16,0,14,1,100,'2015-12-17 16:11:13','2015-12-17 16:11:13','admin@yes-cart.com','admin@yes-cart.com','b110c3df-cf5f-4cb5-8230-144db0a4ee2d'),(18,0,17,1,100,'2015-12-21 10:06:04','2015-12-21 10:06:04','admin@yes-cart.com','admin@yes-cart.com','572191aa-6e21-44c6-b009-da0f9f554f90'),(20,0,13,1,100,'2015-12-24 18:39:29','2015-12-24 18:39:29','admin@yes-cart.com','admin@yes-cart.com','444863f8-c750-49b7-ae3d-ca9043d6fed6'),(21,0,18,1,100,'2017-05-26 06:41:53','2017-05-26 06:41:53','admin@yes-cart.com','admin@yes-cart.com','d6701e2e-aa4b-4b2d-8103-6d5ecaf8fb55');
+/*!40000 ALTER TABLE `tshopwarehouse` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2017-06-14  5:15:16

@@ -1,0 +1,4 @@
+Необхідно підтвердити замовлення $root.ordernum на $shop.name
+для $root.firstname $root.lastname $root.email
+
+${include('common-adm-order-details')}

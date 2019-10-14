@@ -1,0 +1,8 @@
+Dear $root.firstname $root.lastname!
+Delivery $deliveryNum for order $root.ordernum at $shop.name is shipped
+by $deliveryCarrierName $deliveryCarrierSlaName <% out.print(deliveryExtNum == null ? "" : deliveryExtNum) %>.
+
+${include('common-order-delivery-details')}
+
+You can view detailed information in order history
+"<%out.print(shop.getDefaultShopUrl())%>/yes-shop/order?order=<%=root.cartGuid%>"

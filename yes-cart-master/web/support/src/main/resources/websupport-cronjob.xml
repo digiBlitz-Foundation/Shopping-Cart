@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright 2009 Denys Pavlov, Igor Azarnyi
+  ~
+  ~    Licensed under the Apache License, Version 2.0 (the "License");
+  ~    you may not use this file except in compliance with the License.
+  ~    You may obtain a copy of the License at
+  ~
+  ~        http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~    Unless required by applicable law or agreed to in writing, software
+  ~    distributed under the License is distributed on an "AS IS" BASIS,
+  ~    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~    See the License for the specific language governing permissions and
+  ~    limitations under the License.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="sfProductCacheHelper" class="org.yes.cart.cache.impl.CacheBundleHelperImpl">
+        <property name="cacheManager" ref="cacheManager"/>
+        <property name="caches">
+            <set>
+                <value>priceService-minimalPrice</value>
+                <value>priceService-allCurrentPrices</value>
+                <value>priceService-allPrices</value>
+                <value>productService-productById</value>
+                <value>productService-skuById</value>
+                <value>productService-productBySkuCode</value>
+                <value>productSkuService-productSkuBySkuCode</value>
+                <value>skuWarehouseService-productSkusOnWarehouse</value>
+                <value>skuWarehouseService-productOnWarehouse</value>
+                <value>web.bookmarkService-seoProduct</value>
+                <value>web.bookmarkService-seoSku</value>
+            </set>
+        </property>
+    </bean>
+
+    <!-- ################################ Regular Global/Discontinued products indexing  ####################### -->
+
+    <bean id="productsGlobalIndexProcessor" class="org.yes.cart.bulkjob.cron.PausableProcessorWrapperImpl">
+        <property name="processor">
+            <bean class="org.yes.cart.bulkjob.product.ProductsGlobalIndexProcessorImpl">
+                <constructor-arg index="0" ref="productService"/>
+                <constructor-arg index="1" ref="nodeService"/>
+                <constructor-arg index="2" ref="systemService"/>
+                <constructor-arg index="3" ref="sfProductCacheHelper"/>
+            </bean>
+        </property>
+        <property name="systemService" ref="systemService"/>
+        <property name="pausePreferenceKey" value="JOB_GLOBALREINDEX_PAUSE"/>
+        <property name="pausePreferenceDefault" value="true"/>
+    </bean>
+
+    <bean name="productsGlobalIndexProcessorJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="org.yes.cart.bulkjob.cron.YcCronJob" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="jobName" value="Reindex All Products" />
+                <entry key="job" value-ref="productsGlobalIndexProcessor" />
+                <entry key="nodeService" value-ref="nodeService" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="productsGlobalIndexProcessorTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="productsGlobalIndexProcessorJob" />
+        <property name="cronExpression" value="${ws.cron.productsGlobalIndexProcessorJob}" />
+    </bean>
+
+
+    <bean id="productsPassedAvailabilityDateIndexProcessorInternal" parent="txJobProxyTemplate">
+        <property name="target">
+            <bean class="org.yes.cart.bulkjob.product.ProductsPassedAvailabilityDateIndexProcessorImpl">
+                <constructor-arg index="0" ref="productService"/>
+                <constructor-arg index="1" ref="nodeService"/>
+                <constructor-arg index="2" ref="systemService"/>
+                <constructor-arg index="3" ref="sfProductCacheHelper"/>
+                <property name="numberOfDays" value="2"/>
+                <lookup-method name="getSelf" bean="productsPassedAvailabilityDateIndexProcessorInternal"/>
+            </bean>
+        </property>
+        <property name="transactionAttributes">
+            <props>
+                <!-- All job beans are Runnable, and they must run in isolation  -->
+                <prop key="findDiscontinuedProductsIds">PROPAGATION_REQUIRES_NEW,-Throwable</prop>
+                <prop key="reindexBatch">PROPAGATION_REQUIRES_NEW,-Throwable</prop>
+                <prop key="*">PROPAGATION_NOT_SUPPORTED</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="productsPassedAvailabilityDateIndexProcessor" class="org.yes.cart.bulkjob.cron.PausableProcessorWrapperImpl">
+        <property name="processor" ref="productsPassedAvailabilityDateIndexProcessorInternal"/>
+        <property name="systemService" ref="systemService"/>
+        <property name="pausePreferenceKey" value="JOB_EXPIREREINDEX_PAUSE"/>
+        <property name="pausePreferenceDefault" value="true"/>
+    </bean>
+
+
+    <bean name="reindexDiscontinuedProductsJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="org.yes.cart.bulkjob.cron.YcCronJob" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="jobName" value="Reindex Discontinued Products" />
+                <entry key="job" value-ref="productsPassedAvailabilityDateIndexProcessor" />
+                <entry key="nodeService" value-ref="nodeService" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="reindexDiscontinuedProductsTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="reindexDiscontinuedProductsJob" />
+        <property name="cronExpression" value="${ws.cron.reindexDiscontinuedProductsJob}" />
+    </bean>
+
+    <!-- ################################ Inventory updates products indexing  ############################# -->
+
+    <bean id="productInventoryChangedProcessorInternal" parent="txJobProxyTemplate">
+        <property name="target">
+            <bean class="org.yes.cart.bulkjob.product.ProductInventoryChangedProcessorImpl">
+                <constructor-arg index="0" ref="skuWarehouseService"/>
+                <constructor-arg index="1" ref="productService"/>
+                <constructor-arg index="2" ref="nodeService"/>
+                <constructor-arg index="3" ref="systemService"/>
+                <constructor-arg index="4" ref="runtimeAttributeService"/>
+                <constructor-arg index="5" ref="sfProductCacheHelper"/>
+                <lookup-method name="getSelf" bean="productInventoryChangedProcessorInternal"/>
+            </bean>
+        </property>
+        <property name="transactionAttributes">
+            <props>
+                <!-- All job beans are Runnable, and they must run in isolation  -->
+                <prop key="reindexBatch">PROPAGATION_REQUIRES_NEW,-Throwable</prop>
+                <prop key="*">PROPAGATION_NOT_SUPPORTED</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="productInventoryChangedProcessor" class="org.yes.cart.bulkjob.cron.PausableProcessorWrapperImpl">
+        <property name="processor" ref="productInventoryChangedProcessorInternal"/>
+        <property name="systemService" ref="systemService"/>
+        <property name="pausePreferenceKey" value="JOB_PRODINVUP_PAUSE"/>
+        <property name="pausePreferenceDefault" value="false"/>
+    </bean>
+
+    <bean name="productInventoryChangedProcessorJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="org.yes.cart.bulkjob.cron.YcCronJob" />
+        <property name="jobDataAsMap">
+            <map>
+                <entry key="jobName" value="Inventory Changes Product Indexing" />
+                <entry key="job" value-ref="productInventoryChangedProcessor" />
+                <entry key="nodeService" value-ref="nodeService" />
+            </map>
+        </property>
+    </bean>
+
+    <bean id="productInventoryChangedProcessorJobCronTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="productInventoryChangedProcessorJob" />
+        <property name="startDelay" value="60000"/>
+        <property name="cronExpression" value="${ws.cron.productInventoryChangedProcessorJob}" />
+    </bean>
+
+
+    <!-- ################################ Scheduler  ####################################################### -->
+
+
+    <bean id="quartzSysProps1" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetClass"><value>java.lang.System</value></property>
+        <property name="targetMethod"><value>setProperty</value></property>
+        <property name="arguments">
+            <list>
+                <value>org.terracotta.quartz.skipUpdateCheck</value>
+                <value>true</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="quartzSysProps2" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetClass"><value>java.lang.System</value></property>
+        <property name="targetMethod"><value>setProperty</value></property>
+        <property name="arguments">
+            <list>
+                <value>org.terracotta.quartz.skipUpdateCheck</value>
+                <value>true</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="webCronSchedule" class="org.springframework.scheduling.quartz.SchedulerFactoryBean"
+          depends-on="quartzSysProps1,quartzSysProps2">
+        <property name="triggers">
+            <list>
+                <!--
+                      reindexDiscontinuedProductsTrigger and productsGlobalIndexProcessorTrigger are two alternatives
+                      that perform full reindex.
+
+                      Only one of these should be enabled. reindexDiscontinuedProductsTrigger is aimed at locating
+                      items that are no longer available and then removing them out of the search index.
+                      productsGlobalIndexProcessorTrigger simply does full reindex (that includes removing outdated).
+
+                      The enable/disable should be controlled by cron schedule set to far future (say 2099). By default
+                      only reindexDiscontinuedProductsTrigger is set to 5am daily and productsGlobalIndexProcessorTrigger
+                      is set to 2099 (i.e. disabled)
+                  -->
+                <ref bean="reindexDiscontinuedProductsTrigger" />
+                <ref bean="productsGlobalIndexProcessorTrigger" />
+                <!--
+                     Cron job that detect inventory changes between job runs and then
+                     re-indexes the SKU corresponding to those inventory items.
+                     This is needed for delta changes updates in index for example when
+                     inventory is updated either due to inventory update or changes caused
+                     by customer order
+                  -->
+                <ref bean="productInventoryChangedProcessorJobCronTrigger" />
+            </list>
+        </property>
+        <property name="quartzProperties">
+            <props>
+                <prop key="org.quartz.scheduler.skipUpdateCheck">true</prop>
+                <prop key="org.terracotta.quartz.skipUpdateCheck">true</prop>
+            </props>
+        </property>
+        <property name="startupDelay" value="30"/><!-- Give context 30sec to stabilise before starting quartz -->
+    </bean>
+
+
+</beans>

@@ -1,0 +1,7 @@
+Шановний (-на) $root.firstname $root.lastname!
+Ваше замовлення $root.ordernum at $shop.name було скасовано.
+
+${include('common-order-details')}
+
+Детальну інформацію Ви можете переглянути в історії замовлень
+"<%out.print(shop.getDefaultShopUrl())%>/yes-shop/order?order=<%=root.cartGuid%>"

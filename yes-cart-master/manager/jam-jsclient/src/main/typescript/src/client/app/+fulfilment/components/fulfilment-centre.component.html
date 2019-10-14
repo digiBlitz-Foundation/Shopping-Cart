@@ -1,0 +1,152 @@
+<template [ngIf]="centre">
+
+  <form role="form" [formGroup]="centreForm">
+    <tabset>
+
+      <tab heading="{{ 'TAB_MAIN' | translate }}"  (select)="tabSelected('Main')">
+
+        <div>
+          <div class="col-md-9 col-lg-6">
+            <div class="panel-body">
+              <fieldset>
+                <div class="form-group">
+                  <label>{{ 'CODE' | translate }}</label>
+                  <input autofocus class="form-control" placeholder="{{ 'CODE' | translate }}" formControlName="code" name="code" type="text" [(ngModel)]="centre.code">
+                  <div [hidden]="centreForm.controls['code'].valid || centreForm.controls['code'].pristine" class="alert alert-danger">
+                    <div [hidden]="!centreForm.controls['code'].hasError('checking')">
+                      {{ 'REMOTE_CHECK' | translate }}
+                    </div>
+                    <div [hidden]="!centreForm.controls['code'].hasError('DUPLICATE')">
+                      {{ 'UNIQUE_REQUIRED' | translate }}
+                    </div>
+                    {{ 'ALPHANUM_REQUIRED' | translate }}
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>{{ 'DESCRIPTION' | translate }}</label>
+                  <input class="form-control" placeholder="{{ 'DESCRIPTION' | translate }}" formControlName="description" name="description" type="text" [(ngModel)]="centre.description">
+                </div>
+                <div class="form-group">
+                  <label>{{ 'LOCATION_COUNTRY' | translate }}</label>
+                  <input autofocus class="form-control" placeholder="{{ 'LOCATION_COUNTRY_CODE' | translate }}" formControlName="countryCode" name="countryCode" type="text" [(ngModel)]="centre.countryCode">
+                  <div [hidden]="centreForm.controls['countryCode'].valid || centreForm.controls['countryCode'].pristine" class="alert alert-danger">
+                    {{ 'COUNTRY_CODE_REQUIRED' | translate }}
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>{{ 'LOCATION_STATE_CODE' | translate }}</label>
+                  <input autofocus class="form-control" placeholder="{{ 'LOCATION_STATE_CODE' | translate }}" formControlName="stateCode" name="stateCode" type="text" [(ngModel)]="centre.stateCode">
+                  <div [hidden]="centreForm.controls['stateCode'].valid || centreForm.controls['stateCode'].pristine" class="alert alert-danger">
+                    {{ 'NON_BLANK_TRIMMED_REQUIRED' | translate }}
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>{{ 'LOCATION_CITY' | translate }}</label>
+                  <input autofocus class="form-control" placeholder="{{ 'LOCATION_CITY' | translate }}" formControlName="city" name="city" type="text" [(ngModel)]="centre.city">
+                  <div [hidden]="centreForm.controls['city'].valid || centreForm.controls['city'].pristine" class="alert alert-danger">
+                    {{ 'NON_BLANK_TRIMMED_REQUIRED' | translate }}
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>{{ 'LOCATION_POST_CODE' | translate }}</label>
+                  <input autofocus class="form-control" placeholder="{{ 'LOCATION_POST_CODE' | translate }}" formControlName="postcode" name="postcode" type="text" [(ngModel)]="centre.postcode">
+                  <div [hidden]="centreForm.controls['postcode'].valid || centreForm.controls['postcode'].pristine" class="alert alert-danger">
+                    {{ 'NON_BLANK_TRIMMED_REQUIRED' | translate }}
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+
+          </div>
+        </div>
+
+      </tab>
+
+      <tab heading="{{ 'TAB_I18N' | translate }}"  (select)="tabSelected('I18n')">
+
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-lg-9">
+              <yc-i18n-table title="{{ 'NAME' | translate }}"
+                             [source]="centre"
+                             value="name"
+                             i18n="displayNames"
+                             defaultRequired="true"
+                             (dataChanged)="onNameDataChange($event)"></yc-i18n-table>
+            </div>
+          </div>
+
+        </div>
+      </tab>
+
+      <tab heading="{{ 'TAB_SHOPS' | translate }}"  (select)="tabSelected('Shops')">
+
+        <template [ngIf]="!(centre.warehouseId > 0)">
+
+          <div class="row">
+            <div class="col-xs-12 block-padding-spacer">
+              <div class="bg-info text-padding">
+                <p>{{ 'SAVEDOBJECT_REQUIRED' | translate }}</p>
+              </div>
+            </div>
+          </div>
+
+        </template>
+
+        <template [ngIf]="centre.warehouseId > 0">
+
+          <div class="row">
+            <div class="col-md-6 col-lg-5">
+              <h3>{{ 'ASSIGNED' | translate }}</h3>
+                <span *ngFor="let supported of supportedShops">
+                  <a class="btn js-click" (click)=onSupportedShopClick(supported)><span [ngClass]="supported.second.disabled ? 'text-strikethrough text-muted' : '' ">{{supported.first.name}} ( {{supported.first.code}} ) </span> <i class="fa fa-remove"></i></a>
+                </span>
+            </div>
+            <div class="col-md-6 col-lg-5">
+              <h3>{{ 'AVAILABLE' | translate }}</h3>
+                <span *ngFor="let available of availableShops">
+                  <a class="btn js-click" (click)=onAvailableShopClick(available)>{{available.first.name}} ( {{available.first.code}} ) <i class="fa fa-plus"></i></a>
+                </span>
+            </div>
+          </div>
+
+        </template>
+
+      </tab>
+
+      <tab heading="{{ 'TAB_CONFIGURATIONS' | translate }}"  (select)="tabSelected('Configurations')">
+
+        <div>
+          <div class="col-md-9 col-lg-6">
+            <div class="panel-body">
+              <fieldset>
+                <div class="form-group">
+                  <label>{{ 'FULFILMENT_CENTRE_STD_LEAD' | translate }}</label>
+                  <input class="form-control" placeholder="{{ 'FULFILMENT_CENTRE_STD_LEAD' | translate }}" formControlName="defaultStandardStockLeadTime" name="defaultStandardStockLeadTime" type="text" [(ngModel)]="centre.defaultStandardStockLeadTime">
+                  <div [hidden]="centreForm.controls['defaultStandardStockLeadTime'].valid || centreForm.controls['defaultStandardStockLeadTime'].pristine" class="alert alert-danger">
+                    {{ 'POS_INT_REQUIRED' | translate }}
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>{{ 'FULFILMENT_CENTRE_BO_LEAD' | translate }}</label>
+                  <input class="form-control" placeholder="{{ 'FULFILMENT_CENTRE_BO_LEAD' | translate }}" formControlName="defaultBackorderStockLeadTime" name="defaultBackorderStockLeadTime" type="text" [(ngModel)]="centre.defaultBackorderStockLeadTime">
+                  <div [hidden]="centreForm.controls['defaultBackorderStockLeadTime'].valid || centreForm.controls['defaultBackorderStockLeadTime'].pristine" class="alert alert-danger">
+                    {{ 'POS_INT_REQUIRED' | translate }}
+                  </div>
+                </div>
+                <div>
+                  <input formControlName="multipleShippingSupported" name="multipleShippingSupported" type="checkbox" [(ngModel)]="centre.multipleShippingSupported">
+                  <label>{{ 'FULFILMENT_CENTRE_MULTI_DELIVERY' | translate }}</label>
+                </div>
+              </fieldset>
+            </div>
+
+          </div>
+        </div>
+
+      </tab>
+
+    </tabset>
+  </form>
+
+</template>

@@ -1,0 +1,3 @@
+Заказ $root.ordernum на $shop.name подтвержден для $root.firstname $root.lastname $root.email
+
+${include('common-adm-order-details')}

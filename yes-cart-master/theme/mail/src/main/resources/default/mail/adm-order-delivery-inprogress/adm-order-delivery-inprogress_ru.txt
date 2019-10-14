@@ -1,0 +1,3 @@
+Доставка $deliveryNum в процессе для заказа $root.ordernum на $shop.name.
+
+${include('common-adm-order-delivery-details')}

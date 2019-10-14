@@ -1,0 +1,3 @@
+Lieferung $deliveryNum für Bestellung $root.ordernum bei $shop.name in Bearbeitung.
+
+${include('common-adm-order-delivery-details')}

@@ -1,0 +1,3 @@
+Payment taken/processing for $root.ordernum at $shop.name
+
+${include('common-adm-order-details')}

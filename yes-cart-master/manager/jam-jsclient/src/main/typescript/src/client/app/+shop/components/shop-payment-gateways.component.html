@@ -1,0 +1,17 @@
+<template [ngIf]="shopCode == null">
+
+  <div class="row">
+    <div class="col-xs-12 block-padding-spacer">
+      <div class="bg-info text-padding">
+        <p>{{ 'SAVEDOBJECT_REQUIRED' | translate }}</p>
+      </div>
+    </div>
+  </div>
+
+</template>
+
+<template [ngIf]="shopCode">
+
+   <yc-payment-gateways [system]="false" [shopCode]="shopCode"></yc-payment-gateways>
+
+</template>

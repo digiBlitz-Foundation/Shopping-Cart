@@ -1,0 +1,4 @@
+Delivery $deliveryNum for order $root.ordernum at $shop.name allocated
+for $root.firstname $root.lastname $root.email
+
+${include('common-adm-order-delivery-details')}

@@ -1,0 +1,3 @@
+Выполнен возврат для заказа $root.ordernum на $shop.name.
+
+${include('common-adm-order-details')}

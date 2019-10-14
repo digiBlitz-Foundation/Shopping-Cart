@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="text/javascript" src="tinymce.min.js"></script>
+  <script type="text/javascript">
+
+    function getUrlParameter(sParam) {
+      var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+      for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+          return sParameterName[1] === undefined ? true : sParameterName[1];
+        }
+      }
+      return null;
+    };
+
+    window.msgId = getUrlParameter('id');
+
+    function contentSubmit() {
+      window.opener.postMessage({ lang: window.contentlang, text: document.getElementById('content').value }, '*');
+      return false;
+    }
+
+    function previewURLConverter(url, node, on_save, name) {
+      // console.log('convert', url, node, on_save, name);
+      if (url.indexOf('http') === 0 || url.charAt(0) === '/') {
+        return url;
+      }
+      return '/' + url;
+    }
+
+    window.addEventListener('message', function(event) {
+
+      var _msg = event.data;
+      var _shop = _msg.shop;
+      var _docBase = _msg.docBase;
+      var _css = _msg.previewCss;
+      var _content = _msg.content;
+      var _lang = _content.lang;
+
+      window.contentlang = _lang;
+
+      var _form = document.getElementById('contentform');
+      _form.style.display = 'block';
+      _form.setAttribute('data-shop-docbase', _docBase);
+      _form.setAttribute('data-shop-css', _css);
+
+      var _textarea = document.getElementById('content');
+      _textarea.value = _content.text;
+
+      tinymce.init({
+        selector: 'textarea',
+        urlconverter_callback : 'previewURLConverter',
+        language: _lang,
+        document_base_url: _docBase,
+        height: 500,
+        theme: 'modern',
+        plugins: [
+          'advlist autolink lists link image charmap print preview hr anchor pagebreak',
+          'searchreplace wordcount visualblocks visualchars code fullscreen',
+          'insertdatetime media nonbreaking save table contextmenu directionality',
+          'emoticons template paste textcolor colorpicker textpattern imagetools'
+        ],
+        toolbar1: 'insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media',
+        toolbar2: 'save print preview | forecolor backcolor',
+        image_advtab: true,
+        templates: [
+          { title: 'Two columns', content: '<div class="row"><div class="col-xs-12 col-md-6">Col 1</div><div class="col-xs-12 col-md-6">Col 2</div></div>' },
+        ],
+        content_css: [
+          _css
+        ],
+        force_p_newlines: false,
+        forced_root_block: 'template'
+      });
+
+      var _load = document.getElementById('loading');
+      if (_load) {
+        _load.style.display = 'none';
+      }
+    });
+    window.onload = function() {
+      window.opener.postMessage({ loaded: window.msgId  }, '*');
+    }
+  </script>
+</head>
+<body>
+<img id="loading" src="../../img/ajax-loader.gif">
+<form id="contentform" action="#" onsubmit="contentSubmit()" style="display:none;"><textarea id="content" name="content"></textarea></form>
+</body>
+</html>

@@ -1,0 +1,3 @@
+Оплата по заказу $root.ordernum на $shop.name подтверждена для $root.firstname $root.lastname $root.email
+
+${include('common-adm-order-details')}
